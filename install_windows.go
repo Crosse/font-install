@@ -26,9 +26,10 @@ func (f Font) install(compressedFile *zip.File) (err error) {
 
 	rs := bytes.NewReader(buf)
 
-	if _, ok := FontExtensions[path.Ext(compressedFile.Name)]; !ok {
+	baseName := path.Base(compressedFile.Name)
+	if _, ok := FontExtensions[path.Ext(baseName)]; !ok {
 		// Only install files that are actual fonts.
-		log.Debugf("Non-font file not installed: \"%v\"", compressedFile.Name)
+		log.Debugf("Non-font file not installed: \"%v\"", baseName)
 		return
 	}
 
@@ -57,15 +58,15 @@ func (f Font) install(compressedFile *zip.File) (err error) {
 	}
 
 	if name == "" {
-		log.Errorf("Font %v has no name!", compressedFile.Name)
-		name = compressedFile.Name
+		log.Errorf("Font %v has no name!", baseName)
+		name = baseName
 	}
 	log.Infof("Installing %v", name)
 
 	// To install a font on Windows:
 	//  - Copy the file to the fonts directory
 	//  - Create a registry entry for the font
-	fileName := path.Join(FontsDir, compressedFile.Name)
+	fileName := path.Join(FontsDir, baseName)
 	if err = ioutil.WriteFile(fileName, buf, 0644); err != nil {
 		return
 	}
@@ -75,7 +76,7 @@ func (f Font) install(compressedFile *zip.File) (err error) {
 		return
 	}
 	defer k.Close()
-	if err = k.SetStringValue(name, compressedFile.Name); err != nil {
+	if err = k.SetStringValue(name, baseName); err != nil {
 		//TODO: clean up the file we just created?
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
+	"runtime"
 
 	log "github.com/Crosse/gosimplelogger"
 )
@@ -45,5 +46,8 @@ func main() {
 		if err = v.Install(); err != nil {
 			log.Error(err)
 		}
+	}
+	if runtime.GOOS == "windows" {
+		log.Info("You will need to logoff and logon before the installed fonts will be available.")
 	}
 }
