@@ -55,7 +55,10 @@ func (f Font) Download() (zipReader *zip.Reader, err error) {
 func (f Font) Install() error {
 	if zipReader, err := f.Download(); err == nil {
 		for _, zf := range zipReader.File {
-			f.install(zf)
+			err = f.install(zf)
+			if err != nil {
+				return err
+			}
 		}
 	} else {
 		return err
