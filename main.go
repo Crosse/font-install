@@ -16,6 +16,11 @@ func main() {
 	var debug = flag.Bool("debug", false, "Enable debug logging")
 	flag.Parse()
 
+	if *filename == "" && len(flag.Args()) == 0 {
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	if *debug {
 		log.LogLevel = log.LogDebug
 	} else {
