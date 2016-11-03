@@ -5,7 +5,7 @@ import (
 	"path"
 )
 
-// The path to the Fonts directory on Windows.
+// FontsDir denotes the path to the user's fonts directory on Linux.
 // Windows doesn't have the concept of a permanent, per-user collection
 // of fonts, meaning that all fonts are stored in the system-level fonts
 // directory, which is %WINDIR%\Fonts by default.

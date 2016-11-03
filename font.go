@@ -10,6 +10,7 @@ import (
 	log "github.com/Crosse/gosimplelogger"
 )
 
+// FontData describes a font file and the various metadata associated with it.
 type FontData struct {
 	Name     string
 	Family   string
@@ -18,11 +19,16 @@ type FontData struct {
 	Data     *bytes.Reader
 }
 
+// FontExtensions is a list of file extensions that denote fonts.
+// Only files ending with these extensions will be installed.
 var FontExtensions = map[string]bool{
 	".otf": true,
 	".ttf": true,
 }
 
+// NewFontData creates a new FontData struct.
+// fileName is the font's file name, and data is a byte slice containing the font file data.
+// It returns a FontData struct describing the font, or an error.
 func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 	if _, ok := FontExtensions[path.Ext(fileName)]; !ok {
 		return nil, errors.New(fmt.Sprintf("Not a font: %v", fileName))

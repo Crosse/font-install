@@ -13,6 +13,9 @@ import (
 	log "github.com/Crosse/gosimplelogger"
 )
 
+// InstallFont installs the font specified by fontPath.
+// fontPath can either be a URL or a filesystem path.
+// For URLs, only the "file", "http", and "https" schemes are currently valid.
 func InstallFont(fontPath string) (err error) {
 	var b []byte
 	var fontData *FontData

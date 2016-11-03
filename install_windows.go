@@ -15,6 +15,7 @@ func platformDependentInstall(fontData *FontData) (err error) {
 	//  - Create a registry entry for the font
 	fullPath := path.Join(FontsDir, fontData.FileName)
 
+	// First, copy the file to the Fonts directory.
 	fd, err := os.Create(fullPath)
 	if err != nil {
 		return
@@ -26,8 +27,10 @@ func platformDependentInstall(fontData *FontData) (err error) {
 		return
 	}
 
+	// Second, write metadata about the font to the registry.
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`, registry.WRITE)
 	if err != nil {
+		// If this fails, remove the font file as well.
 		log.Error(err)
 		if nexterr := os.Remove(fullPath); nexterr != nil {
 			return nexterr
@@ -36,6 +39,7 @@ func platformDependentInstall(fontData *FontData) (err error) {
 	}
 	defer k.Close()
 	if err = k.SetStringValue(fontData.Name, fontData.FileName); err != nil {
+		// If this fails, remove the font file as well.
 		log.Error(err)
 		if nexterr := os.Remove(fullPath); nexterr != nil {
 			return nexterr
