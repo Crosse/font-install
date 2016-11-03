@@ -3,7 +3,6 @@ package main
 import (
 	"archive/zip"
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -35,7 +34,7 @@ func InstallFont(fontPath string) (err error) {
 			return err
 		}
 	default:
-		return errors.New(fmt.Sprintf("Unhandled URL scheme: %v", u.Scheme))
+		return fmt.Errorf("Unhandled URL scheme: %v", u.Scheme)
 	}
 
 	if isZipFile(b) {
