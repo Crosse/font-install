@@ -112,6 +112,6 @@ func installFromZIP(data []byte) (err error) {
 }
 
 func install(fontData *FontData) (err error) {
-	log.Infof("Installing %v (%v)", fontData.Name, fontData.FileName)
+	log.Infof("Installing %v", fontData.Name)
 	return platformDependentInstall(fontData)
 }

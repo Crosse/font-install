@@ -14,6 +14,7 @@ func platformDependentInstall(fontData *FontData) (err error) {
 	//  - Copy the file to the fonts directory
 	//  - Create a registry entry for the font
 	fullPath := path.Join(FontsDir, fontData.FileName)
+	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
 	// First, copy the file to the Fonts directory.
 	fd, err := os.Create(fullPath)
