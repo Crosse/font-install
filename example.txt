@@ -1,0 +1,11 @@
+http://www.fontsquirrel.com/fonts/download/open-sans
+http://www.fontsquirrel.com/fonts/download/source-code-pro
+http://www.fontsquirrel.com/fonts/download/droid-sans
+http://www.fontsquirrel.com/fonts/download/droid-sans-mono
+http://www.fontsquirrel.com/fonts/download/Inconsolata
+http://www.fontsquirrel.com/fonts/download/liberation-mono
+http://www.fontsquirrel.com/fonts/download/liberation-sans
+http://www.fontsquirrel.com/fonts/download/liberation-serif
+http://www.fontsquirrel.com/fonts/download/ubuntu
+http://www.fontsquirrel.com/fonts/download/ubuntu-mono
+http://fontawesome.io/assets/font-awesome-4.7.0.zip

@@ -1,85 +1,115 @@
-// +build darwin linux
-
 package main
 
 import (
 	"archive/zip"
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
-	"os"
+	"net/http"
+	"net/url"
 	"path"
-	"strings"
 
-	"github.com/ConradIrwin/font/sfnt"
 	log "github.com/Crosse/gosimplelogger"
 )
 
-func (f Font) install(compressedFile *zip.File) (err error) {
-	rc, err := compressedFile.Open()
-	if err != nil {
-		return
-	}
-	defer rc.Close()
+func InstallFont(fontPath string) (err error) {
+	var b []byte
+	var fontData *FontData
 
-	buf, err := ioutil.ReadAll(rc)
-	if err != nil {
-		return
-	}
-
-	rs := bytes.NewReader(buf)
-
-	if _, ok := FontExtensions[path.Ext(compressedFile.Name)]; !ok {
-		// Only install files that are actual fonts.
-		log.Debugf("Non-font file not installed: \"%v\"", compressedFile.Name)
-		return
-	}
-
-	font, err := sfnt.Parse(rs)
+	u, err := url.Parse(fontPath)
 	if err != nil {
 		return
 	}
 
-	if font.HasTable(sfnt.TagName) == false {
-		return errors.New("Font has no name table")
+	switch u.Scheme {
+	case "file", "":
+		if b, err = getLocalFile(fontPath); err != nil {
+			return err
+		}
+	case "http", "https":
+		if b, err = getRemoteFile(fontPath); err != nil {
+			return err
+		}
+	default:
+		return errors.New(fmt.Sprintf("Unhandled URL scheme: %v", u.Scheme))
 	}
 
-	nameTable := font.NameTable()
-	entries := make(map[sfnt.NameID]string)
-	for _, nameEntry := range nameTable.List() {
-		entries[nameEntry.NameID] = nameEntry.String()
+	if isZipFile(b) {
+		err = installFromZIP(b)
+	} else {
+		fontData, err = NewFontData(path.Base(u.Path), b)
+		if err != nil {
+			return
+		}
+		err = install(fontData)
 	}
-	name := entries[sfnt.NameFull]
-	family := entries[sfnt.NamePreferredFamily]
-	if family == "" {
-		if v, ok := entries[sfnt.NameFontFamily]; ok {
-			family = v
-		} else {
-			log.Errorf("Font %v has no font family!", name)
+
+	return
+}
+
+func isZipFile(data []byte) bool {
+	contentType := http.DetectContentType(data)
+	log.Debugf("Detected content type: %v", contentType)
+	return contentType == "application/zip"
+}
+
+func getRemoteFile(url string) (data []byte, err error) {
+	log.Debugf("Downloading font file from %v", url)
+
+	var client = http.Client{}
+	resp, err := client.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Debugf("HTTP request resulted in status %v", resp.StatusCode)
+		return
+	}
+
+	data, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func getLocalFile(filename string) (data []byte, err error) {
+	if data, err = ioutil.ReadFile(filename); err != nil {
+		return nil, err
+	}
+	return
+}
+
+func installFromZIP(data []byte) (err error) {
+	bytesReader := bytes.NewReader(data)
+	zipReader, err := zip.NewReader(bytesReader, int64(bytesReader.Len()))
+	if err != nil {
+		return
+	}
+
+	for _, zf := range zipReader.File {
+		rc, err := zf.Open()
+		if err != nil {
+			return err
+		}
+		defer rc.Close()
+
+		data, err := ioutil.ReadAll(rc)
+		if err != nil {
+			return err
+		}
+
+		if fontData, err := NewFontData(zf.Name, data); err == nil {
+			err = install(fontData)
 		}
 	}
+	return
+}
 
-	if name == "" {
-		log.Errorf("Font %v has no name!", compressedFile.Name)
-		name = compressedFile.Name
-	}
-	log.Infof("Installing %v", name)
-
-	fontPath := path.Join(FontsDir, strings.ToLower(strings.Replace(family, " ", "-", -1)))
-	log.Debugf("Creating font directory %v", fontPath)
-	err = os.MkdirAll(fontPath, 0700)
-	if err != nil {
-		return
-	}
-
-	fileName := path.Join(fontPath, compressedFile.Name)
-	if err = os.MkdirAll(path.Dir(fileName), 0700); err != nil {
-		return
-	}
-
-	if err = ioutil.WriteFile(fileName, buf, 0644); err != nil {
-		return
-	}
-
-	return nil
+func install(fontData *FontData) (err error) {
+	log.Infof("Installing %v (%v)", fontData.Name, fontData.FileName)
+	return platformDependentInstall(fontData)
 }

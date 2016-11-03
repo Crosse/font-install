@@ -1,67 +1,66 @@
 package main
 
 import (
-	"archive/zip"
 	"bytes"
-	"io/ioutil"
-	"net/http"
+	"errors"
+	"fmt"
+	"path"
 
+	"github.com/ConradIrwin/font/sfnt"
 	log "github.com/Crosse/gosimplelogger"
 )
+
+type FontData struct {
+	Name     string
+	Family   string
+	FileName string
+	Metadata map[sfnt.NameID]string
+	Data     *bytes.Reader
+}
 
 var FontExtensions = map[string]bool{
 	".otf": true,
 	".ttf": true,
 }
 
-type Font struct {
-	Name string
-	URL  string
-}
-type Fonts []Font
-
-func (f Font) Download() (zipReader *zip.Reader, err error) {
-	zipReader = nil
-	err = nil
-
-	log.Debugf("Downloading font ZIP file from %v", f.URL)
-
-	var client = http.Client{}
-	resp, err := client.Get(f.URL)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		log.Debugf("HTTP request resulted in status %v", resp.StatusCode)
-		return
+func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
+	if _, ok := FontExtensions[path.Ext(fileName)]; !ok {
+		return nil, errors.New(fmt.Sprintf("Not a font: %v", fileName))
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
+	fontData = &FontData{
+		FileName: fileName,
+		Metadata: make(map[sfnt.NameID]string),
+		Data:     bytes.NewReader(data),
 	}
 
-	r := bytes.NewReader(b)
-	zipReader, err = zip.NewReader(r, int64(len(b)))
+	font, err := sfnt.Parse(fontData.Data)
 	if err != nil {
-		return
+		return nil, err
+	}
+
+	if font.HasTable(sfnt.TagName) == false {
+		return nil, errors.New(fmt.Sprintf("Font %v has no name table", fileName))
+	}
+
+	nameTable := font.NameTable()
+	for _, nameEntry := range nameTable.List() {
+		fontData.Metadata[nameEntry.NameID] = nameEntry.String()
+	}
+	fontData.Name = fontData.Metadata[sfnt.NameFull]
+	fontData.Family = fontData.Metadata[sfnt.NamePreferredFamily]
+	if fontData.Family == "" {
+		if v, ok := fontData.Metadata[sfnt.NameFontFamily]; ok {
+			fontData.Family = v
+		} else {
+			log.Errorf("Font %v has no font family!", fontData.Name)
+		}
+	}
+
+	if fontData.Name == "" {
+		log.Errorf("Font %v has no name! Using file name instead.", fileName)
+		fontData.Name = fileName
 	}
 
 	return
-}
-
-func (f Font) Install() error {
-	if zipReader, err := f.Download(); err == nil {
-		for _, zf := range zipReader.File {
-			err = f.install(zf)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		return err
-	}
-	return nil
 }
