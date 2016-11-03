@@ -2,7 +2,8 @@
 
 `font-install` is a cross-platform utility to install fonts on a system.
 It can install fonts on Linux, OSX, or Windows systems.
-Given a ZIP file, it will install all font files within the archive.
+Given a ZIP file, it will even install all font files within the archive.
+If you feed `font-install` an HTTP/HTTPS URL, it will first download the file, then install the font (or extract and install them if the file is a ZIP file).
 `font-install` currently only handles OpenType and TrueType font files.
 
 `font-install` is not intended to handle webfonts; it installs fonts so that other applications can use (such as your display manager, office suite, etc.).
