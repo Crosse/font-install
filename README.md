@@ -1,5 +1,7 @@
 # font-install
 
+[![Build Status](https://travis-ci.org/Crosse/font-install.svg?branch=master)](https://travis-ci.org/Crosse/font-install)
+
 `font-install` is a cross-platform utility to install fonts on a system.
 It can install fonts on Linux, OSX, or Windows systems.
 Given a ZIP file, it will even install all font files within the archive.
