@@ -1,5 +1,7 @@
 package = github.com/Crosse/font-install
 
+default: release
+
 dep:
 	glide install
 
@@ -13,4 +15,4 @@ release:
 	GOOS=windows GOARCH=amd64 go build -o release/font-install-windows-amd64.exe $(package)
 	GOOS=windows GOARCH=386   go build -o release/font-install-windows-386.exe   $(package)
 
-.PHONY: release
+.PHONY: dep release
