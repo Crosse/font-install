@@ -1,10 +1,12 @@
 package main
 
 import (
-	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	log "github.com/Crosse/gosimplelogger"
 )
 
 func platformDependentInstall(fontData *FontData) (err error) {
@@ -19,12 +21,6 @@ func platformDependentInstall(fontData *FontData) (err error) {
 		return
 	}
 
-	fd, err := os.Create(fullPath)
-	if err != nil {
-		return
-	}
-	defer fd.Close()
-
-	_, err = io.Copy(fd, fontData.Data)
+	err = ioutil.WriteFile(fullPath, fontData.Data, 0644)
 	return
 }

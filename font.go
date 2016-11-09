@@ -15,7 +15,7 @@ type FontData struct {
 	Family   string
 	FileName string
 	Metadata map[sfnt.NameID]string
-	Data     *bytes.Reader
+	Data     []byte
 }
 
 // FontExtensions is a list of file extensions that denote fonts.
@@ -36,10 +36,10 @@ func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 	fontData = &FontData{
 		FileName: fileName,
 		Metadata: make(map[sfnt.NameID]string),
-		Data:     bytes.NewReader(data),
+		Data:     data,
 	}
 
-	font, err := sfnt.Parse(fontData.Data)
+	font, err := sfnt.Parse(bytes.NewReader(fontData.Data))
 	if err != nil {
 		return nil, err
 	}

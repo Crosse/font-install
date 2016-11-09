@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"path"
 
@@ -17,14 +17,7 @@ func platformDependentInstall(fontData *FontData) (err error) {
 	fullPath := path.Join(FontsDir, fontData.FileName)
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
-	// First, copy the file to the Fonts directory.
-	fd, err := os.Create(fullPath)
-	if err != nil {
-		return
-	}
-	defer fd.Close()
-
-	_, err = io.Copy(fd, fontData.Data)
+	err = ioutil.WriteFile(fullPath, fontData.Data, 0644)
 	if err != nil {
 		return
 	}
