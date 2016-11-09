@@ -1,0 +1,19 @@
+language: go
+go:
+- 1.6
+- 1.7
+deploy:
+  provider: releases
+  api_key:
+    secure: VuEm3PPXvRTvWvBt8Fx++8enyKrxRl1yDXmUHRoMAsywH7Kf9ldTQTFO/KjfS/2t5GU+X+rG1JeQ5ooWgCqcNEYv1BR5w2nOHz+7UfzHF+V1Nq3aavRiuV/LvVFMvMvltK/pOvv7JLzcfKsL6+pYfP/nnTTj9LpBzuRBKsgF5hs8YCNm3jebr7F1vQL6CwYLTZqk6oLi7QZ/WmNa/+QyxXXbca3/IdaXyoJMxEeoWqOaC2hz73kE4qhjgNREib3ZLbo092w12YKgxn1NkNAz9WWKipGMzmxLxmk+rK67D8ykppQBJ0+Vt9vd54Gf1Wbt+glR16ghIxiI/Fx33cSp8AhSx5elrq5hK2yaL2IKtllrXQiii0ilMbxbw4H5Jbt/HMEseN+izPzDsIh+e6FMwT4oSiOk13XmoqXzWf46tCTG3AoiSagW/6Dy4U/QRRtMPAxf23V9vKqhm38qOemoNJdsrcIwajLmWHklX6VNt9b9f7ehTl7+TC6P3Ku2MBhENTjxlyYPJwFNXGjdoa4l7ABOrk1A1MQvfXFTMQ3sAWSMrkVLLa3qQ0eV6HPaFoU1WlWbciNH+cctsZBcUnv/rN166ldcpmzdzoplmLjyE1RHgmNs9Fpp/v/ck1w5FyC7Cv2UaDrRYVVeFcpFWU0ulbnDSIeU3kszOKfzQN4J7+A=
+  file:
+  - release/font-install-linux-amd64
+  - release/font-install-linux-386
+  - release/font-install-linux-arm64
+  - release/font-install-linux-arm
+  - release/font-install-darwin-amd64
+  - release/font-install-windows-amd64
+  - release/font-install-windows-386
+  on:
+    repo: Crosse/font-install
+    tags: true
