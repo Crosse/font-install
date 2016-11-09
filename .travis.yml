@@ -15,8 +15,8 @@ deploy:
   - release/font-install-linux-arm64
   - release/font-install-linux-arm
   - release/font-install-darwin-amd64
-  - release/font-install-windows-amd64
-  - release/font-install-windows-386
+  - release/font-install-windows-amd64.exe
+  - release/font-install-windows-386.exe
   on:
     repo: Crosse/font-install
     tags: true
