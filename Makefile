@@ -1,5 +1,8 @@
 package = github.com/Crosse/font-install
 
+dep:
+	glide install
+
 release:
 	mkdir -p release
 	GOOS=linux   GOARCH=amd64 go build -o release/font-install-linux-amd64   $(package)
