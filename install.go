@@ -12,6 +12,8 @@ import (
 	log "github.com/Crosse/gosimplelogger"
 )
 
+var installedFonts = 0
+
 // InstallFont installs the font specified by fontPath.
 // fontPath can either be a URL or a filesystem path.
 // For URLs, only the "file", "http", and "https" schemes are currently valid.
@@ -113,5 +115,9 @@ func installFromZIP(data []byte) (err error) {
 
 func install(fontData *FontData) (err error) {
 	log.Infof("Installing %v", fontData.Name)
-	return platformDependentInstall(fontData)
+	err = platformDependentInstall(fontData)
+	if err == nil {
+		installedFonts += 1
+	}
+	return
 }

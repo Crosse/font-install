@@ -52,6 +52,8 @@ func main() {
 		}
 	}
 
+	log.Infof("Installed %v fonts", installedFonts)
+
 	if runtime.GOOS == "windows" {
 		log.Info("You will need to logoff and logon before the installed font(s) will be available.")
 	}
