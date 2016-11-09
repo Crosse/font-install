@@ -1,16 +1,6 @@
 package = github.com/Crosse/font-install
 
-GLIDE := $(shell command -v glide)
-
-default: release
-
-setup:
-ifndef GLIDE
-	curl https://glide.sh/get | sh
-endif
-	glide install
-
-release: setup
+release:
 	mkdir -p release
 	GOOS=linux   GOARCH=amd64 go build -o release/font-install-linux-amd64   $(package)
 	GOOS=linux   GOARCH=386   go build -o release/font-install-linux-386     $(package)
