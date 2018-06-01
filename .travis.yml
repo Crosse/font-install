@@ -1,10 +1,9 @@
 language: go
 go:
-- 1.7
+- 1.10.2
 install:
-  - go get -d github.com/Masterminds/glide
-  - cd $GOPATH/src/github.com/Masterminds/glide && git checkout v0.12.3 && go install && cd -
-  - make dep
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - dep ensure
 deploy:
   provider: releases
   api_key:
