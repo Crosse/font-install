@@ -48,7 +48,11 @@ func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 		return nil, fmt.Errorf("Font %v has no name table", fileName)
 	}
 
-	nameTable := font.NameTable()
+	nameTable, err := font.NameTable()
+	if err != nil {
+		return nil, err
+	}
+
 	for _, nameEntry := range nameTable.List() {
 		fontData.Metadata[nameEntry.NameID] = nameEntry.String()
 	}
