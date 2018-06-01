@@ -24,7 +24,7 @@ Enter `font-install`: a tool that will download, extract, and install fonts the 
 
 ## Requirements
 
-This tool was built with Go 1.7.3. It might work with previous versions of Go, but hasn't been tested.
+This tool was originally built with Go 1.7.3, and has been verified to build with 1.10.2.
 
 ## Installation
 
