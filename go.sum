@@ -1,0 +1,13 @@
+dmitri.shuralyov.com/font/woff2 v0.0.0-20180220214647-957792cbbdab h1:Ew70NL+wL6v9looOiJJthlqA41VzoJS+q9AyjHJe6/g=
+dmitri.shuralyov.com/font/woff2 v0.0.0-20180220214647-957792cbbdab/go.mod h1:FvHgTMJanm43G7B3MVSjS/jim5ytVqAJNAOpRhnuHJc=
+github.com/ConradIrwin/font v0.0.0-20180221002504-ba3a36e6f0fa h1:jvqHTbttk9FdCdsQ/BLksOBJacfGxR2qFwm7o2oHv9g=
+github.com/ConradIrwin/font v0.0.0-20180221002504-ba3a36e6f0fa/go.mod h1:RfqDRypmK6cOLNPzccgIJ999A/yzpd0iGh6xazqpWrY=
+github.com/Crosse/gosimplelogger v0.1.0 h1:zTaJVyy4mp0GyK6+MgvBJ80xveDa9ZNEwaEqNYbm/kA=
+github.com/Crosse/gosimplelogger v0.1.0/go.mod h1:whwzH0thK39LhKDbhxl6Uq/7ykKuwNkySB2v6vm6tf0=
+github.com/casimir/xdg-go v0.0.0-20160329195404-372ccc2180da h1:hjpZV7G49m1bly++F+Gho1Sbf2+eBW/eTLJWuRkH9Uc=
+github.com/casimir/xdg-go v0.0.0-20160329195404-372ccc2180da/go.mod h1:dywSSi3sMtJn2IjiYfJciP9tjVVeIVRa7AE7N5WLUBo=
+github.com/dsnet/compress v0.0.0-20171208185109-cc9eb1d7ad76 h1:eX+pdPPlD279OWgdx7f6KqIRSONuK7egk+jDx7OM3Ac=
+github.com/dsnet/compress v0.0.0-20171208185109-cc9eb1d7ad76/go.mod h1:KjxHHirfLaw19iGT70HvVjHQsL1vq1SRQB4yOsAfy2s=
+golang.org/x/sys v0.0.0-20180525142821-c11f84a56e43/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
+golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
