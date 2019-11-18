@@ -15,6 +15,7 @@ func main() {
 
 	var filename = flag.String("fromFile", "", "text file containing fonts to install")
 	var debug = flag.Bool("debug", false, "Enable debug logging")
+	var dryrun = flag.Bool("dry-run", false, "Don't actually download or install anything")
 	flag.Parse()
 
 	if *filename == "" && len(flag.Args()) == 0 {
@@ -56,6 +57,11 @@ func main() {
 	}
 
 	for _, v := range fonts {
+		if *dryrun {
+			log.Infof("Would install font(s) from %v", v)
+			continue
+		}
+
 		log.Debugf("Installing font from %v", v)
 		if err := InstallFont(v); err != nil {
 			log.Error(err)
