@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"os"
+	"regexp"
 	"runtime"
 
 	log "github.com/Crosse/gosimplelogger"
@@ -34,7 +35,16 @@ func main() {
 		}
 		scanner := bufio.NewScanner(fd)
 		for scanner.Scan() {
-			fonts = append(fonts, scanner.Text())
+			line := scanner.Text()
+			skip, err := regexp.MatchString(`^(#.*|\s*)?$`, line)
+			if err != nil {
+				log.Errorf("error reading %s: $v", *filename, err)
+				continue
+			}
+
+			if !skip {
+				fonts = append(fonts, line)
+			}
 		}
 		if err = scanner.Err(); err != nil {
 			log.Fatal(err)
