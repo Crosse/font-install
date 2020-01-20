@@ -1,3 +1,5 @@
+// +build linux solaris
+
 package main
 
 import (
