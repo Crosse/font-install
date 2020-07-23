@@ -2,9 +2,6 @@ package = github.com/Crosse/font-install
 
 default: release
 
-dep:
-	glide install
-
 release:
 	mkdir -p release
 	GOOS=linux   GOARCH=amd64 go build -o release/font-install-linux-amd64       $(package)
@@ -14,5 +11,6 @@ release:
 	GOOS=darwin  GOARCH=amd64 go build -o release/font-install-darwin-amd64      $(package)
 	GOOS=windows GOARCH=amd64 go build -o release/font-install-windows-amd64.exe $(package)
 	GOOS=windows GOARCH=386   go build -o release/font-install-windows-386.exe   $(package)
+	find release -type f -execdir zip -m9 "{}-$(TAG).zip" "{}" \;
 
-.PHONY: dep release
+.PHONY: release
