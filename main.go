@@ -42,13 +42,7 @@ func main() {
 		scanner := bufio.NewScanner(fd)
 		for scanner.Scan() {
 			line := scanner.Text()
-			skip := re.MatchString(line)
-			if err != nil {
-				log.Errorf("error reading %s: %v", *filename, err)
-				continue
-			}
-
-			if !skip {
+			if !re.MatchString(line) {
 				fonts = append(fonts, line)
 			}
 		}
