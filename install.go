@@ -111,7 +111,8 @@ func installFromZIP(data []byte) (err error) {
 
 		fontData, err := NewFontData(zf.Name, data)
 		if err != nil {
-			return err
+			log.Errorf(`Skipping non-font file "%s"`, zf.Name)
+			continue
 		}
 
 		if _, ok := fonts[fontData.Name]; !ok {
