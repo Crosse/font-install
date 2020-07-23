@@ -98,6 +98,7 @@ func installFromZIP(data []byte) (err error) {
 
 	fonts := make(map[string]*FontData)
 
+	log.Debug("Scanning ZIP file for fonts")
 	for _, zf := range zipReader.File {
 		rc, err := zf.Open()
 		if err != nil {
@@ -145,7 +146,7 @@ func installFromZIP(data []byte) (err error) {
 }
 
 func install(fontData *FontData) (err error) {
-	log.Infof("Installing %v", fontData.Name)
+	log.Infof("==> %s", fontData.Name)
 	err = platformDependentInstall(fontData)
 	if err == nil {
 		installedFonts += 1
