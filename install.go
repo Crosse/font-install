@@ -73,7 +73,7 @@ func getRemoteFile(url string) (data []byte, err error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		log.Debugf("HTTP request resulted in status %v", resp.StatusCode)
 		return
 	}
