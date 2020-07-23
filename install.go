@@ -38,7 +38,7 @@ func InstallFont(fontPath string) (err error) {
 			return err
 		}
 	default:
-		return fmt.Errorf("Unhandled URL scheme: %v", u.Scheme)
+		return fmt.Errorf("unhandled URL scheme: %v", u.Scheme)
 	}
 
 	if isZipFile(b) {

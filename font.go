@@ -31,7 +31,7 @@ var fontExtensions = map[string]bool{
 // It returns a FontData struct describing the font, or an error.
 func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 	if _, ok := fontExtensions[strings.ToLower(path.Ext(fileName))]; !ok {
-		return nil, fmt.Errorf("Not a font: %v", fileName)
+		return nil, fmt.Errorf("not a font: %v", fileName)
 	}
 
 	fontData = &FontData{
@@ -46,7 +46,7 @@ func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 	}
 
 	if !font.HasTable(sfnt.TagName) {
-		return nil, fmt.Errorf("Font %v has no name table", fileName)
+		return nil, fmt.Errorf("font %v has no name table", fileName)
 	}
 
 	nameTable, err := font.NameTable()
