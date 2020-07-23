@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	log "github.com/Crosse/gosimplelogger"
 )
@@ -94,6 +95,8 @@ func installFromZIP(data []byte) (err error) {
 		return
 	}
 
+	fonts := make(map[string]*FontData)
+
 	for _, zf := range zipReader.File {
 		rc, err := zf.Open()
 		if err != nil {
@@ -106,8 +109,26 @@ func installFromZIP(data []byte) (err error) {
 			return err
 		}
 
-		if fontData, err := NewFontData(zf.Name, data); err == nil {
-			err = install(fontData)
+		fontData, err := NewFontData(zf.Name, data)
+		if err != nil {
+			return err
+		}
+
+		if _, ok := fonts[fontData.Name]; !ok {
+			fonts[fontData.Name] = fontData
+		} else {
+			// Prefer OTF over TTF; otherwise prefer the first font we found.
+			first := strings.ToLower(path.Ext(fonts[fontData.Name].FileName))
+			second := strings.ToLower(path.Ext(fontData.FileName))
+			if first != second && second == ".otf" {
+				fonts[fontData.Name] = fontData
+			}
+		}
+	}
+
+	for _, font := range fonts {
+		if err = install(font); err != nil {
+			return err
 		}
 	}
 	return
