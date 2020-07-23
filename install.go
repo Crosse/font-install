@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"runtime"
 	"strings"
 
 	log "github.com/Crosse/gosimplelogger"
@@ -122,12 +123,20 @@ func installFromZIP(data []byte) (err error) {
 			first := strings.ToLower(path.Ext(fonts[fontData.Name].FileName))
 			second := strings.ToLower(path.Ext(fontData.FileName))
 			if first != second && second == ".otf" {
+				log.Infof(`Preferring "%s" over "%s"`, fontData.FileName, fonts[fontData.Name].FileName)
 				fonts[fontData.Name] = fontData
 			}
 		}
 	}
 
 	for _, font := range fonts {
+		if strings.Contains(strings.ToLower(font.Name), "windows compatible") {
+			if runtime.GOOS != "windows" {
+				// hack to not install the "Windows Compatible" version of every nerd font.
+				log.Infof(`Ignoring "%s" on non-Windows platform`, font.Name)
+				continue
+			}
+		}
 		if err = install(font); err != nil {
 			return err
 		}
