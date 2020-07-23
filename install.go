@@ -159,7 +159,7 @@ func install(fontData *FontData) (err error) {
 
 	err = platformDependentInstall(fontData)
 	if err == nil {
-		installedFonts += 1
+		installedFonts++
 	}
 
 	return err
