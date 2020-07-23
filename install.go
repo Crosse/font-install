@@ -42,16 +42,15 @@ func InstallFont(fontPath string) (err error) {
 	}
 
 	if isZipFile(b) {
-		err = installFromZIP(b)
-	} else {
-		fontData, err = NewFontData(path.Base(u.Path), b)
-		if err != nil {
-			return
-		}
-		err = install(fontData)
+		return installFromZIP(b)
 	}
 
-	return
+	fontData, err = NewFontData(path.Base(u.Path), b)
+	if err != nil {
+		return err
+	}
+
+	return install(fontData)
 }
 
 func isZipFile(data []byte) bool {
@@ -150,7 +149,7 @@ func installFromZIP(data []byte) (err error) {
 		}
 	}
 
-	return
+	return nil
 }
 
 func install(fontData *FontData) (err error) {
@@ -161,5 +160,5 @@ func install(fontData *FontData) (err error) {
 		installedFonts += 1
 	}
 
-	return
+	return err
 }

@@ -74,5 +74,5 @@ func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 		fontData.Name = fileName
 	}
 
-	return
+	return fontData, nil
 }

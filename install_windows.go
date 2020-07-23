@@ -19,7 +19,7 @@ func platformDependentInstall(fontData *FontData) (err error) {
 
 	err = ioutil.WriteFile(fullPath, fontData.Data, 0644)
 	if err != nil {
-		return
+		return err
 	}
 
 	// Second, write metadata about the font to the registry.
