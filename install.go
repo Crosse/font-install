@@ -59,7 +59,7 @@ func isZipFile(data []byte) bool {
 }
 
 func getRemoteFile(url string) (data []byte, err error) {
-	log.Debugf("Downloading font file from %v", url)
+	log.Infof("Downloading font file from %v", url)
 
 	var client = http.Client{}
 	resp, err := client.Get(url)
