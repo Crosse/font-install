@@ -20,8 +20,10 @@ var installedFonts = 0
 // fontPath can either be a URL or a filesystem path.
 // For URLs, only the "file", "http", and "https" schemes are currently valid.
 func InstallFont(fontPath string) (err error) {
-	var b []byte
-	var fontData *FontData
+	var (
+		b        []byte
+		fontData *FontData
+	)
 
 	u, err := url.Parse(fontPath)
 	if err != nil {

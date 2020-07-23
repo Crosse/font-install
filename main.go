@@ -11,11 +11,13 @@ import (
 )
 
 func main() {
-	var fonts []string
+	var (
+		fonts    []string
+		filename = flag.String("fromFile", "", "text file containing fonts to install")
+		debug    = flag.Bool("debug", false, "Enable debug logging")
+		dryrun   = flag.Bool("dry-run", false, "Don't actually download or install anything")
+	)
 
-	var filename = flag.String("fromFile", "", "text file containing fonts to install")
-	var debug = flag.Bool("debug", false, "Enable debug logging")
-	var dryrun = flag.Bool("dry-run", false, "Don't actually download or install anything")
 	flag.Parse()
 
 	if *filename == "" && len(flag.Args()) == 0 {
