@@ -17,7 +17,7 @@ func platformDependentInstall(fontData *FontData) (err error) {
 	fullPath := path.Join(FontsDir, fontData.FileName)
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
-	err = ioutil.WriteFile(fullPath, fontData.Data, 0644)
+	err = ioutil.WriteFile(fullPath, fontData.Data, 0644) //nolint:gosec
 	if err != nil {
 		return err
 	}

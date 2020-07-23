@@ -19,7 +19,7 @@ func platformDependentInstall(fontData *FontData) (err error) {
 		return
 	}
 
-	err = ioutil.WriteFile(fullPath, fontData.Data, 0644)
+	err = ioutil.WriteFile(fullPath, fontData.Data, 0644) //nolint:gosec
 
 	return
 }
