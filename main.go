@@ -34,12 +34,14 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		re := regexp.MustCompile(`^(#.*|\s*)?$`)
+
 		scanner := bufio.NewScanner(fd)
 		for scanner.Scan() {
 			line := scanner.Text()
-			skip, err := regexp.MatchString(`^(#.*|\s*)?$`, line)
+			skip := re.MatchString(line)
 			if err != nil {
-				log.Errorf("error reading %s: $v", *filename, err)
+				log.Errorf("error reading %s: %v", *filename, err)
 				continue
 			}
 
@@ -52,9 +54,7 @@ func main() {
 		}
 	}
 
-	for _, v := range flag.Args() {
-		fonts = append(fonts, v)
-	}
+	fonts = append(fonts, flag.Args()...)
 
 	for _, v := range fonts {
 		if *dryrun {

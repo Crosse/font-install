@@ -45,7 +45,7 @@ func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 		return nil, err
 	}
 
-	if font.HasTable(sfnt.TagName) == false {
+	if !font.HasTable(sfnt.TagName) {
 		return nil, fmt.Errorf("Font %v has no name table", fileName)
 	}
 
