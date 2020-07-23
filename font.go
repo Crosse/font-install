@@ -57,8 +57,10 @@ func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 	for _, nameEntry := range nameTable.List() {
 		fontData.Metadata[nameEntry.NameID] = nameEntry.String()
 	}
+
 	fontData.Name = fontData.Metadata[sfnt.NameFull]
 	fontData.Family = fontData.Metadata[sfnt.NamePreferredFamily]
+
 	if fontData.Family == "" {
 		if v, ok := fontData.Metadata[sfnt.NameFontFamily]; ok {
 			fontData.Family = v

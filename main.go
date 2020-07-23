@@ -34,6 +34,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		re := regexp.MustCompile(`^(#.*|\s*)?$`)
 
 		scanner := bufio.NewScanner(fd)
@@ -49,6 +50,7 @@ func main() {
 				fonts = append(fonts, line)
 			}
 		}
+
 		if err = scanner.Err(); err != nil {
 			log.Fatal(err)
 		}
@@ -63,6 +65,7 @@ func main() {
 		}
 
 		log.Debugf("Installing font from %v", v)
+
 		if err := InstallFont(v); err != nil {
 			log.Error(err)
 		}

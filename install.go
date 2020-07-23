@@ -57,6 +57,7 @@ func InstallFont(fontPath string) (err error) {
 func isZipFile(data []byte) bool {
 	contentType := http.DetectContentType(data)
 	log.Debugf("Detected content type: %v", contentType)
+
 	return contentType == "application/zip"
 }
 
@@ -64,6 +65,7 @@ func getRemoteFile(url string) (data []byte, err error) {
 	log.Infof("Downloading font file from %v", url)
 
 	var client = http.Client{}
+
 	resp, err := client.Get(url)
 	if err != nil {
 		return
@@ -79,6 +81,7 @@ func getRemoteFile(url string) (data []byte, err error) {
 	if err != nil {
 		return
 	}
+
 	return
 }
 
@@ -86,11 +89,13 @@ func getLocalFile(filename string) (data []byte, err error) {
 	if data, err = ioutil.ReadFile(filename); err != nil {
 		return nil, err
 	}
+
 	return
 }
 
 func installFromZIP(data []byte) (err error) {
 	bytesReader := bytes.NewReader(data)
+
 	zipReader, err := zip.NewReader(bytesReader, int64(bytesReader.Len()))
 	if err != nil {
 		return
@@ -99,6 +104,7 @@ func installFromZIP(data []byte) (err error) {
 	fonts := make(map[string]*FontData)
 
 	log.Debug("Scanning ZIP file for fonts")
+
 	for _, zf := range zipReader.File {
 		rc, err := zf.Open()
 		if err != nil {
@@ -138,18 +144,22 @@ func installFromZIP(data []byte) (err error) {
 				continue
 			}
 		}
+
 		if err = install(font); err != nil {
 			return err
 		}
 	}
+
 	return
 }
 
 func install(fontData *FontData) (err error) {
 	log.Infof("==> %s", fontData.Name)
+
 	err = platformDependentInstall(fontData)
 	if err == nil {
 		installedFonts += 1
 	}
+
 	return
 }

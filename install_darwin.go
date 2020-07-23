@@ -20,5 +20,6 @@ func platformDependentInstall(fontData *FontData) (err error) {
 	}
 
 	err = ioutil.WriteFile(fullPath, fontData.Data, 0644)
+
 	return
 }
