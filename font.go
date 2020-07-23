@@ -19,9 +19,9 @@ type FontData struct {
 	Data     []byte
 }
 
-// FontExtensions is a list of file extensions that denote fonts.
+// fontExtensions is a list of file extensions that denote fonts.
 // Only files ending with these extensions will be installed.
-var FontExtensions = map[string]bool{
+var fontExtensions = map[string]bool{
 	".otf": true,
 	".ttf": true,
 }
@@ -30,7 +30,7 @@ var FontExtensions = map[string]bool{
 // fileName is the font's file name, and data is a byte slice containing the font file data.
 // It returns a FontData struct describing the font, or an error.
 func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
-	if _, ok := FontExtensions[strings.ToLower(path.Ext(fileName))]; !ok {
+	if _, ok := fontExtensions[strings.ToLower(path.Ext(fileName))]; !ok {
 		return nil, fmt.Errorf("Not a font: %v", fileName)
 	}
 
