@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"path"
+	"strings"
 
 	"github.com/ConradIrwin/font/sfnt"
 	log "github.com/Crosse/gosimplelogger"
@@ -29,7 +30,7 @@ var FontExtensions = map[string]bool{
 // fileName is the font's file name, and data is a byte slice containing the font file data.
 // It returns a FontData struct describing the font, or an error.
 func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
-	if _, ok := FontExtensions[path.Ext(fileName)]; !ok {
+	if _, ok := FontExtensions[strings.ToLower(path.Ext(fileName))]; !ok {
 		return nil, fmt.Errorf("Not a font: %v", fileName)
 	}
 
