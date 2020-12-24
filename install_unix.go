@@ -1,4 +1,4 @@
-// +build linux solaris
+// +build linux solaris openbsd
 
 package main
 
