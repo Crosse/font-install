@@ -7,7 +7,7 @@ require (
 	github.com/casimir/xdg-go v0.0.0-20160329195404-372ccc2180da
 	github.com/dsnet/compress v0.0.1
 	golang.org/x/sys v0.0.0-20191118133127-cf1e2d577169
-	golang.org/x/text v0.3.4
+	golang.org/x/text v0.3.5
 )
 
 go 1.13
