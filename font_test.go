@@ -7,33 +7,6 @@ import (
 )
 
 func TestFontData(t *testing.T) {
-	filename := "test_data/open-sans-v18-latin-regular.ttf"
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		t.Fatalf("error opening file")
-	}
-
-	fontData, err := NewFontData(filename, data)
-	if err != nil {
-		t.Errorf("NewFontData shouldn't error")
-	}
-
-	if fontData.FileName != filename {
-		t.Fatalf("want %q, got %q", filename, fontData.FileName)
-	}
-
-	fontName := "Open Sans Regular"
-	if fontData.Name != fontName {
-		t.Fatalf("want %q, got %q", fontName, fontData.Name)
-	}
-
-	fontFamily := "Open Sans"
-	if fontData.Family != fontFamily {
-		t.Fatalf("want %q, got %q", fontName, fontData.Family)
-	}
-}
-
-func TestExtensions(t *testing.T) {
 	tests := map[string]struct {
 		filename string
 		valid    bool
