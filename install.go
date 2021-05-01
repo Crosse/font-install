@@ -44,7 +44,7 @@ func InstallFont(fontPath string) (err error) {
 	}
 
 	if isZipFile(b) {
-		return installFromZIP(b)
+		return installFromZIP(b, FontsDir)
 	}
 
 	fontData, err = NewFontData(path.Base(u.Path), b)
@@ -52,7 +52,7 @@ func InstallFont(fontPath string) (err error) {
 		return err
 	}
 
-	return install(fontData)
+	return install(fontData, FontsDir)
 }
 
 func isZipFile(data []byte) bool {
@@ -94,7 +94,7 @@ func getLocalFile(filename string) (data []byte, err error) {
 	return
 }
 
-func installFromZIP(data []byte) (err error) {
+func installFromZIP(data []byte, installDir string) (err error) {
 	bytesReader := bytes.NewReader(data)
 
 	zipReader, err := zip.NewReader(bytesReader, int64(bytesReader.Len()))
@@ -146,7 +146,7 @@ func installFromZIP(data []byte) (err error) {
 			}
 		}
 
-		if err = install(font); err != nil {
+		if err = install(font, installDir); err != nil {
 			return err
 		}
 	}
@@ -154,10 +154,10 @@ func installFromZIP(data []byte) (err error) {
 	return nil
 }
 
-func install(fontData *FontData) (err error) {
+func install(fontData *FontData, installDir string) (err error) {
 	log.Infof("==> %s", fontData.Name)
 
-	err = platformDependentInstall(fontData)
+	err = platformDependentInstall(fontData, installDir)
 	if err == nil {
 		installedFonts++
 	}

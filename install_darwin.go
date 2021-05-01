@@ -8,11 +8,11 @@ import (
 	log "github.com/Crosse/gosimplelogger"
 )
 
-func platformDependentInstall(fontData *FontData) (err error) {
+func platformDependentInstall(fontData *FontData, installDir string) (err error) {
 	// On darwin/OSX, the user's fonts directory is ~/Library/Fonts,
 	// and fonts should be installed directly into that path;
 	// i.e., not in subfolders.
-	fullPath := path.Join(FontsDir, path.Base(fontData.FileName))
+	fullPath := path.Join(installDir, path.Base(fontData.FileName))
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
 	if err = os.MkdirAll(path.Dir(fullPath), 0700); err != nil {

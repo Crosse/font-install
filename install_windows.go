@@ -10,11 +10,11 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-func platformDependentInstall(fontData *FontData) (err error) {
+func platformDependentInstall(fontData *FontData, installDir string) (err error) {
 	// To install a font on Windows:
 	//  - Copy the file to the fonts directory
 	//  - Create a registry entry for the font
-	fullPath := path.Join(FontsDir, fontData.FileName)
+	fullPath := path.Join(installDir, fontData.FileName)
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
 	err = ioutil.WriteFile(fullPath, fontData.Data, 0644) //nolint:gosec

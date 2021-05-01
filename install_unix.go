@@ -11,12 +11,12 @@ import (
 	log "github.com/Crosse/gosimplelogger"
 )
 
-func platformDependentInstall(fontData *FontData) (err error) {
+func platformDependentInstall(fontData *FontData, installDir string) (err error) {
 	// On Linux, fontconfig can understand subdirectories. So, to keep the
 	// font directory clean, install all font files for a particular font
 	// family into a subdirectory named after the family (with hyphens instead
 	// of spaces).
-	fullPath := path.Join(FontsDir,
+	fullPath := path.Join(installDir,
 		strings.ToLower(strings.Replace(fontData.Family, " ", "-", -1)),
 		path.Base(fontData.FileName))
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
