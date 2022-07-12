@@ -7,9 +7,9 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -96,7 +96,7 @@ func getRemoteFile(url string) (data []byte, err error) {
 		return
 	}
 
-	data, err = ioutil.ReadAll(resp.Body)
+	data, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
@@ -105,7 +105,7 @@ func getRemoteFile(url string) (data []byte, err error) {
 }
 
 func getLocalFile(filename string) (data []byte, err error) {
-	if data, err = ioutil.ReadFile(filename); err != nil {
+	if data, err = os.ReadFile(filename); err != nil {
 		return nil, err
 	}
 
@@ -194,7 +194,7 @@ func installFromZIP(data []byte) (err error) {
 		}
 		defer rc.Close()
 
-		data, err := ioutil.ReadAll(rc)
+		data, err := io.ReadAll(rc)
 		if err != nil {
 			return err
 		}
