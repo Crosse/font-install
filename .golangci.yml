@@ -1,0 +1,51 @@
+---
+linters:
+  enable-all: true
+  disable:
+    # deprecated
+    - golint
+    - interfacer
+    - maligned
+    - scopelint
+    - ifshort
+    - deadcode
+    - varcheck
+    - structcheck
+    - nosnakecase
+
+    # less useful
+    - cyclop
+    - exhaustivestruct
+    - exhaustruct
+    - forbidigo
+    - funlen
+    - gochecknoglobals
+    - gomnd
+    - ireturn
+    - nolintlint
+    - varnamelen
+
+    # really don't think I need to worry about it in a project this small
+    - goerr113
+
+linters-settings:
+  misspell:
+    ignore-words:
+      - strat
+  nlreturn:
+    block-size: 2
+  exhaustive:
+    default-signifies-exhaustive: true
+  gosec:
+    config:
+      G306: "0644"
+
+issues:
+  exclude-rules:
+    # False positive: https://github.com/kunwardeep/paralleltest/issues/8.
+    - linters:
+        - paralleltest
+      text: "does not use range value in test Run"
+    - linters:
+        - errcheck
+      text: "Error return value of (Info|Error)f? is not checked"
