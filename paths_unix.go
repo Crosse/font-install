@@ -1,3 +1,4 @@
+//go:build linux || solaris || openbsd || freebsd
 // +build linux solaris openbsd freebsd
 
 package main

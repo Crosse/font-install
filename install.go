@@ -5,6 +5,8 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
+	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +15,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"time"
 
 	log "github.com/Crosse/gosimplelogger"
 )
@@ -22,15 +25,16 @@ var installedFonts = 0
 // InstallFont installs the font specified by fontPath.
 // fontPath can either be a URL or a filesystem path.
 // For URLs, only the "file", "http", and "https" schemes are currently valid.
-func InstallFont(fontPath string) (err error) {
+func InstallFont(fontPath string) error {
 	var (
 		b        []byte
+		err      error
 		fontData *FontData
 	)
 
 	u, err := url.Parse(fontPath)
 	if err != nil {
-		return
+		return fmt.Errorf("error parsing path: %w", err)
 	}
 
 	switch u.Scheme {
@@ -70,7 +74,6 @@ func InstallFont(fontPath string) (err error) {
 
 		return install(fontData)
 	}
-
 }
 
 func getContentType(data []byte) string {
@@ -80,39 +83,46 @@ func getContentType(data []byte) string {
 	return contentType
 }
 
-func getRemoteFile(url string) (data []byte, err error) {
+func getRemoteFile(url string) ([]byte, error) {
 	log.Infof("Downloading font file from %v", url)
 
-	var client = http.Client{}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	resp, err := client.Get(url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("cannot make http request: %w", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error getting remote file: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Debugf("HTTP request resulted in status %v", resp.StatusCode)
-		return
+		return nil, fmt.Errorf("server returned non-successful status code %d", resp.StatusCode)
 	}
 
-	data, err = io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("erorr reading remote file: %w", err)
 	}
 
-	return
+	return data, nil
 }
 
-func getLocalFile(filename string) (data []byte, err error) {
-	if data, err = os.ReadFile(filename); err != nil {
-		return nil, err
+func getLocalFile(filename string) ([]byte, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read local file: %w", err)
 	}
 
-	return
+	return data, nil
 }
 
-func installFromGZIP(filename string, data []byte) (err error) {
+func installFromGZIP(filename string, data []byte) error {
 	log.Debug("reading gzipped file")
 
 	bytesReader := bytes.NewReader(data)
@@ -144,7 +154,7 @@ func installFromGZIP(filename string, data []byte) (err error) {
 	return install(fontData)
 }
 
-func installFromTarball(r io.Reader) (err error) {
+func installFromTarball(r io.Reader) error {
 	log.Debug("reading tarball")
 
 	tarReader := tar.NewReader(r)
@@ -155,9 +165,10 @@ func installFromTarball(r io.Reader) (err error) {
 
 	for {
 		hdr, err := tarReader.Next()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
+
 		if err != nil {
 			return fmt.Errorf("cannot read tarball: %w", err)
 		}
@@ -173,7 +184,7 @@ func installFromTarball(r io.Reader) (err error) {
 	return installFonts(fonts)
 }
 
-func installFromZIP(data []byte) (err error) {
+func installFromZIP(data []byte) error {
 	log.Debug("reading zipfile")
 
 	bytesReader := bytes.NewReader(data)
@@ -190,13 +201,13 @@ func installFromZIP(data []byte) (err error) {
 	for _, zf := range zipReader.File {
 		rc, err := zf.Open()
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot open compressed file %s: %w", zf.Name, err)
 		}
 		defer rc.Close()
 
 		data, err := io.ReadAll(rc)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot read compressed file %s: %w", zf.Name, err)
 		}
 
 		appendFont(fonts, zf.Name, data)
@@ -225,7 +236,7 @@ func appendFont(fonts map[string]*FontData, fileName string, data []byte) {
 	}
 }
 
-func installFonts(fonts map[string]*FontData) (err error) {
+func installFonts(fonts map[string]*FontData) error {
 	for _, font := range fonts {
 		if strings.Contains(strings.ToLower(font.Name), "windows compatible") {
 			if runtime.GOOS != "windows" {
@@ -235,7 +246,7 @@ func installFonts(fonts map[string]*FontData) (err error) {
 			}
 		}
 
-		if err = install(font); err != nil {
+		if err := install(font); err != nil {
 			return err
 		}
 	}
@@ -243,10 +254,10 @@ func installFonts(fonts map[string]*FontData) (err error) {
 	return nil
 }
 
-func install(fontData *FontData) (err error) {
+func install(fontData *FontData) error {
 	log.Infof("==> %s", fontData.Name)
 
-	err = platformDependentInstall(fontData)
+	err := platformDependentInstall(fontData)
 	if err == nil {
 		installedFonts++
 	}

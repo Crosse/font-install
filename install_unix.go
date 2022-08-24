@@ -1,9 +1,10 @@
+//go:build linux || solaris || openbsd || freebsd
 // +build linux solaris openbsd freebsd
 
 package main
 
 import (
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -11,19 +12,25 @@ import (
 	log "github.com/Crosse/gosimplelogger"
 )
 
-func platformDependentInstall(fontData *FontData) (err error) {
+func platformDependentInstall(fontData *FontData) error {
 	// On Linux, fontconfig can understand subdirectories. So, to keep the
 	// font directory clean, install all font files for a particular font
 	// family into a subdirectory named after the family (with hyphens instead
 	// of spaces).
 	fullPath := path.Join(FontsDir,
-		strings.ToLower(strings.Replace(fontData.Family, " ", "-", -1)),
+		strings.ToLower(strings.ReplaceAll(fontData.Family, " ", "-")),
 		path.Base(fontData.FileName))
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
-	if err = os.MkdirAll(path.Dir(fullPath), 0700); err != nil {
-		return err
+	err := os.MkdirAll(path.Dir(fullPath), 0o700)
+	if err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	return ioutil.WriteFile(fullPath, fontData.Data, 0644)
+	err = os.WriteFile(fullPath, fontData.Data, 0o644)
+	if err != nil {
+		return fmt.Errorf("cannot write file: %w", err)
+	}
+
+	return nil
 }

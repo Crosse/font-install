@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -10,29 +9,32 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-func platformDependentInstall(fontData *FontData) (err error) {
+func platformDependentInstall(fontData *FontData) error {
 	// To install a font on Windows:
 	//  - Copy the file to the fonts directory
 	//  - Create a registry entry for the font
 	fullPath := path.Join(FontsDir, fontData.FileName)
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
-	err = ioutil.WriteFile(fullPath, fontData.Data, 0644) //nolint:gosec
+	err := os.WriteFile(fullPath, fontData.Data, 0o644)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot write file: %w", err)
 	}
 
 	// Second, write metadata about the font to the registry.
-	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`, registry.WRITE)
+	k, err := registry.OpenKey(
+		registry.LOCAL_MACHINE,
+		`SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`,
+		registry.WRITE)
 	if err != nil {
 		// If this fails, remove the font file as well.
 		log.Error(err)
 
 		if nexterr := os.Remove(fullPath); nexterr != nil {
-			return nexterr
+			return fmt.Errorf("error removing font: %w", nexterr)
 		}
 
-		return err
+		return fmt.Errorf("error opening registry: %w", err)
 	}
 	defer k.Close()
 
@@ -46,10 +48,10 @@ func platformDependentInstall(fontData *FontData) (err error) {
 		log.Error(err)
 
 		if nexterr := os.Remove(fullPath); nexterr != nil {
-			return nexterr
+			return fmt.Errorf("error removing font: %w", nexterr)
 		}
 
-		return err
+		return fmt.Errorf("error writing to registry: %w", err)
 	}
 
 	return nil

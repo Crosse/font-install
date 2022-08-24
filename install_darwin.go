@@ -1,25 +1,29 @@
 package main
 
 import (
-	"io/ioutil"
+	"fmt"
 	"os"
 	"path"
 
 	log "github.com/Crosse/gosimplelogger"
 )
 
-func platformDependentInstall(fontData *FontData) (err error) {
+func platformDependentInstall(fontData *FontData) error {
 	// On darwin/OSX, the user's fonts directory is ~/Library/Fonts,
 	// and fonts should be installed directly into that path;
 	// i.e., not in subfolders.
 	fullPath := path.Join(FontsDir, path.Base(fontData.FileName))
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
-	if err = os.MkdirAll(path.Dir(fullPath), 0700); err != nil {
-		return
+	err := os.MkdirAll(path.Dir(fullPath), 0o700)
+	if err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	err = ioutil.WriteFile(fullPath, fontData.Data, 0644) //nolint:gosec
+	err = os.WriteFile(fullPath, fontData.Data, 0o644)
+	if err != nil {
+		return fmt.Errorf("cannot write file: %w", err)
+	}
 
-	return
+	return nil
 }

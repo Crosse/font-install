@@ -29,12 +29,12 @@ var fontExtensions = map[string]bool{
 // NewFontData creates a new FontData struct.
 // fileName is the font's file name, and data is a byte slice containing the font file data.
 // It returns a FontData struct describing the font, or an error.
-func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
+func NewFontData(fileName string, data []byte) (*FontData, error) {
 	if _, ok := fontExtensions[strings.ToLower(path.Ext(fileName))]; !ok {
 		return nil, fmt.Errorf("not a font: %v", fileName)
 	}
 
-	fontData = &FontData{
+	fontData := &FontData{
 		FileName: fileName,
 		Metadata: make(map[sfnt.NameID]string),
 		Data:     data,
@@ -42,16 +42,16 @@ func NewFontData(fileName string, data []byte) (fontData *FontData, err error) {
 
 	font, err := sfnt.Parse(bytes.NewReader(fontData.Data))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot parse font: %w", err)
 	}
 
 	if !font.HasTable(sfnt.TagName) {
-		return nil, fmt.Errorf("font %v has no name table", fileName)
+		return nil, fmt.Errorf("font has no name table: %s", fileName)
 	}
 
 	nameTable, err := font.NameTable()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cannot get font table for %s: %w", fileName, err)
 	}
 
 	for _, nameEntry := range nameTable.List() {
