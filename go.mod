@@ -4,7 +4,7 @@ require (
 	github.com/ConradIrwin/font v0.0.0-20190603172541-e12dbea4cf12
 	github.com/Crosse/gosimplelogger v0.2.0
 	github.com/casimir/xdg-go v0.0.0-20160329195404-372ccc2180da
-	golang.org/x/sys v0.9.0
+	golang.org/x/sys v0.48.0
 )
 
 require (
@@ -14,4 +14,4 @@ require (
 	golang.org/x/text v0.3.8 // indirect
 )
 
-go 1.18
+go 1.26.0
