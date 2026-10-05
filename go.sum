@@ -1,7 +1,7 @@
 dmitri.shuralyov.com/font/woff2 v0.0.0-20180220214647-957792cbbdab h1:Ew70NL+wL6v9looOiJJthlqA41VzoJS+q9AyjHJe6/g=
 dmitri.shuralyov.com/font/woff2 v0.0.0-20180220214647-957792cbbdab/go.mod h1:FvHgTMJanm43G7B3MVSjS/jim5ytVqAJNAOpRhnuHJc=
-github.com/ConradIrwin/font v0.0.0-20190603172541-e12dbea4cf12 h1:p6Fbemw7MLL8GECFdqBnGqrY6tfeNEECS1Gckyt6JJg=
-github.com/ConradIrwin/font v0.0.0-20190603172541-e12dbea4cf12/go.mod h1:RfqDRypmK6cOLNPzccgIJ999A/yzpd0iGh6xazqpWrY=
+github.com/ConradIrwin/font v0.2.1 h1:D4tWi7zyRAdVKOtOys5960HnAAfUSRx/syaf+J9JqlI=
+github.com/ConradIrwin/font v0.2.1/go.mod h1:krTLO7JWu6g8RMxG8sl+T1Hf8W93XQacBKJmqFZ2MFY=
 github.com/Crosse/gosimplelogger v0.2.0 h1:ETC8ar0tehvg3unr4NO5+ArBFZkG16WflLObDUXuyKY=
 github.com/Crosse/gosimplelogger v0.2.0/go.mod h1:whwzH0thK39LhKDbhxl6Uq/7ykKuwNkySB2v6vm6tf0=
 github.com/casimir/xdg-go v0.0.0-20160329195404-372ccc2180da h1:hjpZV7G49m1bly++F+Gho1Sbf2+eBW/eTLJWuRkH9Uc=
@@ -16,5 +16,7 @@ github.com/shurcooL/gofontwoff v0.0.0-20181114050219-180f79e6909d/go.mod h1:05Ut
 github.com/ulikunitz/xz v0.5.6/go.mod h1:2bypXElzHzzJZwzH67Y6wb67pO62Rzfn7BSiF4ABRW8=
 golang.org/x/sys v0.9.0 h1:KS/R3tvhPqvJvwcKfnBHJwwthS11LRhmM5D59eEXa0s=
 golang.org/x/sys v0.9.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/text v0.3.5/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
 golang.org/x/text v0.3.8 h1:nAL+RVCQ9uMn3vJZbV+MRnydTJFPf8qqY42YiA6MrqY=
 golang.org/x/text v0.3.8/go.mod h1:E6s5w1FMmriuDzIBO73fBruAKo1PCIq6d2Q6DHfQ8WQ=
+golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
