@@ -11,8 +11,12 @@ files.
 
 `font-install` is not intended to handle webfonts; it installs fonts so that
 other applications can use (such as your display manager, office suite,
-etc.).  It currently installs fonts into the system's user-specific fonts
-library location.
+etc.). By default it installs fonts for the current user. Use `-g` to
+install for all users (requires elevated privileges). On Windows, this uses
+`%LOCALAPPDATA%\Microsoft\Windows\Fonts` and the current user's font registry
+key by default; `-g` uses `%WINDIR%\Fonts` and the system registry key.
+Installed Windows fonts are made available to running applications without
+logging off.
 
 ## Background
 
@@ -52,6 +56,8 @@ Usage of font-install:
         Don't actually download or install anything
   -fromFile string
         text file containing fonts to install
+  -g
+        Install fonts for all users (requires privileges)
 ```
 
 ## Examples
@@ -103,6 +109,9 @@ Usage of font-install:
   ==> Open Sans
   Installed 3 fonts
   ```
+  On Windows, wildcard paths such as `font-install "D:\fonts\*.ttf"` also
+  work without shell expansion. To install for all users, run
+  `font-install -g "D:\fonts\*.ttf"` from an elevated terminal.
 * Feed `font-install` a list of fonts to install via a [text file][example.txt]:
   ```
   $ font-install -fromFile example.txt

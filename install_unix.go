@@ -22,7 +22,11 @@ func platformDependentInstall(fontData *FontData) error {
 		path.Base(fontData.FileName))
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
-	err := os.MkdirAll(path.Dir(fullPath), 0o700)
+	mode := os.FileMode(0o700)
+	if globalInstall {
+		mode = 0o755
+	}
+	err := os.MkdirAll(path.Dir(fullPath), mode)
 	if err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}

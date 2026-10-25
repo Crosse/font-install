@@ -8,3 +8,6 @@ import (
 
 // FontsDir denotes the path to the user's fonts directory on OSX.
 var FontsDir = path.Join(xdg.DataHome(), "Fonts")
+
+// GlobalFontsDir is the system-wide macOS font directory.
+var GlobalFontsDir = "/Library/Fonts"

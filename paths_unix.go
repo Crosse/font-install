@@ -10,3 +10,6 @@ import (
 
 // FontsDir denotes the path to the user's fonts directory on Unix-like systems.
 var FontsDir = path.Join(os.Getenv("HOME"), "/.local/share/fonts")
+
+// GlobalFontsDir is the system-wide fontconfig directory.
+var GlobalFontsDir = "/usr/local/share/fonts"

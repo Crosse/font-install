@@ -2,11 +2,11 @@ package main
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 )
 
-// FontsDir denotes the path to the user's fonts directory on Linux.
-// Windows doesn't have the concept of a permanent, per-user collection
-// of fonts, meaning that all fonts are stored in the system-level fonts
-// directory, which is %WINDIR%\Fonts by default.
-var FontsDir = path.Join(os.Getenv("WINDIR"), "Fonts")
+// FontsDir is the current user's Windows font directory.
+var FontsDir = filepath.Join(os.Getenv("LOCALAPPDATA"), "Microsoft", "Windows", "Fonts")
+
+// GlobalFontsDir is the system-wide Windows font directory.
+var GlobalFontsDir = filepath.Join(os.Getenv("WINDIR"), "Fonts")

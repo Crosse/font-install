@@ -4,28 +4,45 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+	"syscall"
+	"unsafe"
 
 	log "github.com/Crosse/gosimplelogger"
 	"golang.org/x/sys/windows/registry"
 )
 
 func platformDependentInstall(fontData *FontData) error {
-	// To install a font on Windows:
-	//  - Copy the file to the fonts directory
-	//  - Create a registry entry for the font
-	fullPath := path.Join(FontsDir, fontData.FileName)
+	// Windows needs the file, a registry entry, and a font-resource notification.
+	fileName := path.Base(fontData.FileName)
+	fullPath := filepath.Join(FontsDir, fileName)
+	fontPath, err := syscall.UTF16PtrFromString(fullPath)
+	if err != nil {
+		return fmt.Errorf("invalid font path: %w", err)
+	}
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
-	err := os.WriteFile(fullPath, fontData.Data, 0o644)
+	if !globalInstall {
+		if err := os.MkdirAll(FontsDir, 0o700); err != nil {
+			return fmt.Errorf("cannot create font directory: %w", err)
+		}
+	}
+	err = os.WriteFile(fullPath, fontData.Data, 0o644)
 	if err != nil {
 		return fmt.Errorf("cannot write file: %w", err)
 	}
 
-	// Second, write metadata about the font to the registry.
-	k, err := registry.OpenKey(
-		registry.LOCAL_MACHINE,
+	// Per-user font entries need an absolute path; system entries use the filename.
+	hive := registry.CURRENT_USER
+	registryValue := fullPath
+	if globalInstall {
+		hive = registry.LOCAL_MACHINE
+		registryValue = fileName
+	}
+	k, _, err := registry.CreateKey(
+		hive,
 		`SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`,
-		registry.WRITE)
+		registry.SET_VALUE)
 	if err != nil {
 		// If this fails, remove the font file as well.
 		log.Error(err)
@@ -38,12 +55,8 @@ func platformDependentInstall(fontData *FontData) error {
 	}
 	defer k.Close()
 
-	// Apparently it's "ok" to mark an OpenType font as "TrueType",
-	// and since this tool only supports True- and OpenType fonts,
-	// this should be Okay(tm).
-	// Besides, Windows does it, so why can't I?
-	valueName := fmt.Sprintf("%v (TrueType)", fontData.FileName)
-	if err = k.SetStringValue(fontData.Name, valueName); err != nil {
+	valueName := fmt.Sprintf("%s (TrueType)", fontData.Name)
+	if err = k.SetStringValue(valueName, registryValue); err != nil {
 		// If this fails, remove the font file as well.
 		log.Error(err)
 
@@ -54,5 +67,19 @@ func platformDependentInstall(fontData *FontData) error {
 		return fmt.Errorf("error writing to registry: %w", err)
 	}
 
+	added, _, callErr := syscall.NewLazyDLL("gdi32.dll").NewProc("AddFontResourceW").Call(uintptr(unsafe.Pointer(fontPath)))
+	if added == 0 {
+		if err := k.DeleteValue(valueName); err != nil {
+			log.Error(err)
+		}
+		if err := os.Remove(fullPath); err != nil {
+			log.Error(err)
+		}
+		return fmt.Errorf("cannot load installed font %s: %v", fullPath, callErr)
+	}
+
+	// Tell running applications to refresh their font lists without a logoff.
+	const hwndBroadcast, wmFontChange = 0xffff, 0x001d
+	syscall.NewLazyDLL("user32.dll").NewProc("SendNotifyMessageW").Call(hwndBroadcast, wmFontChange, 0, 0)
 	return nil
 }
