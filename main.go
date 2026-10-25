@@ -5,10 +5,11 @@ import (
 	"flag"
 	"os"
 	"regexp"
-	"runtime"
 
 	log "github.com/Crosse/gosimplelogger"
 )
+
+var globalInstall bool
 
 func main() {
 	var (
@@ -16,9 +17,14 @@ func main() {
 		filename = flag.String("fromFile", "", "text file containing fonts to install")
 		debug    = flag.Bool("debug", false, "Enable debug logging")
 		dryrun   = flag.Bool("dry-run", false, "Don't actually download or install anything")
+		global   = flag.Bool("g", false, "Install fonts for all users (requires privileges)")
 	)
 
 	flag.Parse()
+	globalInstall = *global
+	if globalInstall {
+		FontsDir = GlobalFontsDir
+	}
 
 	if *filename == "" && len(flag.Args()) == 0 {
 		flag.Usage()
@@ -68,8 +74,4 @@ func main() {
 	}
 
 	log.Infof("Installed %v fonts", installedFonts)
-
-	if runtime.GOOS == "windows" {
-		log.Info("You will need to logoff and logon before the installed font(s) will be available.")
-	}
 }

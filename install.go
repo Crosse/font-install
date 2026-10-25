@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -26,22 +27,50 @@ var installedFonts = 0
 // fontPath can either be a URL or a filesystem path.
 // For URLs, only the "file", "http", and "https" schemes are currently valid.
 func InstallFont(fontPath string) error {
+	return installFontPath(fontPath, true)
+}
+
+func installFontPath(fontPath string, expandGlob bool) error {
 	var (
 		b        []byte
 		err      error
 		fontData *FontData
 	)
 
-	u, err := url.Parse(fontPath)
-	if err != nil {
-		return fmt.Errorf("error parsing path: %w", err)
+	// Windows drive letters look like URL schemes to url.Parse.
+	var u *url.URL
+	if runtime.GOOS == "windows" && filepath.VolumeName(fontPath) != "" {
+		u = &url.URL{Path: fontPath}
+	} else {
+		u, err = url.Parse(fontPath)
+		if err != nil {
+			return fmt.Errorf("error parsing path: %w", err)
+		}
 	}
 
+	filename := path.Base(u.Path)
 	switch u.Scheme {
 	case "file", "":
+		// Shells on Windows do not expand wildcards for command arguments.
+		if expandGlob && strings.ContainsAny(fontPath, "*?[") {
+			matches, err := filepath.Glob(fontPath)
+			if err != nil {
+				return fmt.Errorf("invalid file pattern: %w", err)
+			}
+			if len(matches) == 0 {
+				return fmt.Errorf("no files match %q", fontPath)
+			}
+			for _, match := range matches {
+				if err := installFontPath(match, false); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
 		if b, err = getLocalFile(fontPath); err != nil {
 			return err
 		}
+		filename = filepath.Base(fontPath)
 	case "http", "https":
 		if b, err = getRemoteFile(fontPath); err != nil {
 			return err
@@ -49,8 +78,6 @@ func InstallFont(fontPath string) error {
 	default:
 		return fmt.Errorf("unhandled URL scheme: %v", u.Scheme)
 	}
-
-	filename := path.Base(u.Path)
 
 	ct := getContentType(b)
 	log.Debugf("content type: %s", ct)
