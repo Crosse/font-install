@@ -8,7 +8,10 @@ import (
 )
 
 func TestLocalGlob(t *testing.T) {
+	t.Parallel()
+
 	dir := t.TempDir()
+
 	font := filepath.Join(dir, "font[1].ttf")
 	if err := os.WriteFile(font, []byte("not a font"), 0o600); err != nil {
 		t.Fatal(err)
@@ -27,6 +30,7 @@ func TestLocalGlob(t *testing.T) {
 	if err := os.WriteFile(decoy, []byte("\x1f\x8b\x08 not gzip"), 0o600); err != nil {
 		t.Fatal(err)
 	}
+
 	err = InstallFont(font)
 	if err == nil || !strings.Contains(err.Error(), "cannot parse font") {
 		t.Fatalf("expected literal file to be parsed, got %v", err)

@@ -21,6 +21,7 @@ func main() {
 	)
 
 	flag.Parse()
+
 	globalInstall = *global
 	if globalInstall {
 		FontsDir = GlobalFontsDir

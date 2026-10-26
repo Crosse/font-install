@@ -56,23 +56,13 @@ func installFontPath(fontPath string, expandGlob bool) error {
 		// brackets (e.g. "Inter[opsz,wght].ttf").
 		_, statErr := os.Stat(fontPath)
 		if expandGlob && statErr != nil && strings.ContainsAny(fontPath, "*?[") {
-			matches, err := filepath.Glob(fontPath)
-			if err != nil {
-				return fmt.Errorf("invalid file pattern: %w", err)
-			}
-			if len(matches) == 0 {
-				return fmt.Errorf("no files match %q", fontPath)
-			}
-			for _, match := range matches {
-				if err := installFontPath(match, false); err != nil {
-					return err
-				}
-			}
-			return nil
+			return installGlob(fontPath)
 		}
+
 		if b, err = getLocalFile(fontPath); err != nil {
 			return err
 		}
+
 		filename = filepath.Base(fontPath)
 	case "http", "https":
 		if b, err = getRemoteFile(fontPath); err != nil {
@@ -104,6 +94,27 @@ func installFontPath(fontPath string, expandGlob bool) error {
 
 		return install(fontData)
 	}
+}
+
+// installGlob installs every local file matching pattern. Matches are
+// installed as literal paths, so brackets in their names aren't expanded again.
+func installGlob(pattern string) error {
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return fmt.Errorf("invalid file pattern: %w", err)
+	}
+
+	if len(matches) == 0 {
+		return fmt.Errorf("no files match %q", pattern)
+	}
+
+	for _, match := range matches {
+		if err := installFontPath(match, false); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func getContentType(data []byte) string {
@@ -259,6 +270,7 @@ func appendFont(fonts map[string]*FontData, fileName string, data []byte) {
 		// Prefer OTF over TTF; otherwise prefer the first font we found.
 		first := strings.ToLower(path.Ext(fonts[fontData.Name].FileName))
 		second := strings.ToLower(path.Ext(fontData.FileName))
+
 		if first != second && second == ".otf" {
 			log.Infof(`Preferring "%s" over "%s"`, fontData.FileName, fonts[fontData.Name].FileName)
 			fonts[fontData.Name] = fontData

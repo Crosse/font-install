@@ -1,5 +1,4 @@
 //go:build linux || solaris || openbsd || freebsd
-// +build linux solaris openbsd freebsd
 
 package main
 
@@ -26,6 +25,7 @@ func platformDependentInstall(fontData *FontData) error {
 	if globalInstall {
 		mode = 0o755
 	}
+
 	err := os.MkdirAll(path.Dir(fullPath), mode)
 	if err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)

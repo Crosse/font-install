@@ -25,10 +25,12 @@ func platformDependentInstall(fontData *FontData) error {
 	// Windows needs the file, a registry entry, and a font-resource notification.
 	fileName := path.Base(fontData.FileName)
 	fullPath := filepath.Join(FontsDir, fileName)
+
 	fontPath, err := syscall.UTF16PtrFromString(fullPath)
 	if err != nil {
 		return fmt.Errorf("invalid font path: %w", err)
 	}
+
 	log.Debugf("Installing \"%v\" to %v", fontData.Name, fullPath)
 
 	if !globalInstall {
@@ -36,42 +38,36 @@ func platformDependentInstall(fontData *FontData) error {
 			return fmt.Errorf("cannot create font directory: %w", err)
 		}
 	}
+
 	// A loaded font keeps its file open, so unload every reference to an
 	// existing copy before overwriting it. The same number of references is
 	// restored afterward so applications still using the font keep working.
-	unloaded := 0
-	for {
-		removed, _, _ := procRemoveFontResourceW.Call(uintptr(unsafe.Pointer(fontPath)))
-		if removed == 0 {
-			break
-		}
-		unloaded++
-	}
-	reload := func(n int) {
-		for i := 0; i < n; i++ {
-			procAddFontResourceW.Call(uintptr(unsafe.Pointer(fontPath)))
-		}
-	}
+	unloaded := unloadFont(fontPath)
+
 	err = os.WriteFile(fullPath, fontData.Data, 0o644)
 	pending := false
+
 	if globalInstall && fileInUse(err) {
 		// Fonts in %WINDIR%\Fonts can stay mapped by other processes even after
 		// unloading. Like Windows Installer, replace the file at the next boot.
 		err = replaceAtReboot(fullPath, fontData.Data)
 		pending = err == nil
 	}
+
 	if err != nil {
-		reload(unloaded)
+		reloadFont(fontPath, unloaded)
 		return fmt.Errorf("cannot write file: %w", err)
 	}
 
 	// Per-user font entries need an absolute path; system entries use the filename.
 	hive := registry.CURRENT_USER
 	registryValue := fullPath
+
 	if globalInstall {
 		hive = registry.LOCAL_MACHINE
 		registryValue = fileName
 	}
+
 	k, _, err := registry.CreateKey(
 		hive,
 		`SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`,
@@ -81,7 +77,7 @@ func platformDependentInstall(fontData *FontData) error {
 		log.Error(err)
 
 		if pending {
-			reload(unloaded)
+			reloadFont(fontPath, unloaded)
 		} else if nexterr := os.Remove(fullPath); nexterr != nil {
 			return fmt.Errorf("error removing font: %w", nexterr)
 		}
@@ -94,14 +90,16 @@ func platformDependentInstall(fontData *FontData) error {
 	if strings.EqualFold(filepath.Ext(fileName), ".otf") {
 		fontType = "OpenType"
 	}
+
 	valueName := fmt.Sprintf("%s (%s)", fontData.Name, fontType)
+
 	prevValue, _, prevErr := k.GetStringValue(valueName)
 	if err = k.SetStringValue(valueName, registryValue); err != nil {
 		// If this fails, remove the font file as well.
 		log.Error(err)
 
 		if pending {
-			reload(unloaded)
+			reloadFont(fontPath, unloaded)
 		} else if nexterr := os.Remove(fullPath); nexterr != nil {
 			return fmt.Errorf("error removing font: %w", nexterr)
 		}
@@ -111,8 +109,9 @@ func platformDependentInstall(fontData *FontData) error {
 
 	if pending {
 		// The old file stays in place until the reboot, so keep it loaded.
-		reload(unloaded)
+		reloadFont(fontPath, unloaded)
 		log.Infof("%s is in use and will be updated after a reboot", fullPath)
+
 		return nil
 	}
 
@@ -126,20 +125,50 @@ func platformDependentInstall(fontData *FontData) error {
 		} else {
 			regErr = k.DeleteValue(valueName)
 		}
+
 		if regErr != nil {
 			log.Error(regErr)
 		}
+
 		if err := os.Remove(fullPath); err != nil {
 			log.Error(err)
 		}
-		return fmt.Errorf("cannot load installed font %s: %v", fullPath, callErr)
+
+		return fmt.Errorf("cannot load installed font %s: %w", fullPath, callErr)
 	}
-	reload(unloaded - 1)
+
+	reloadFont(fontPath, unloaded-1)
 
 	// Tell running applications to refresh their font lists without a logoff.
 	const hwndBroadcast, wmFontChange = 0xffff, 0x001d
-	procSendNotifyMessageW.Call(hwndBroadcast, wmFontChange, 0, 0)
+	if sent, _, err := procSendNotifyMessageW.Call(hwndBroadcast, wmFontChange, 0, 0); sent == 0 {
+		log.Debugf("cannot notify applications of the font change: %v", err)
+	}
+
 	return nil
+}
+
+// unloadFont removes every reference to the font file at fontPath from the
+// system font table and returns how many were removed.
+func unloadFont(fontPath *uint16) int {
+	unloaded := 0
+
+	for {
+		removed, _, _ := procRemoveFontResourceW.Call(uintptr(unsafe.Pointer(fontPath)))
+		if removed == 0 {
+			return unloaded
+		}
+
+		unloaded++
+	}
+}
+
+// reloadFont adds n references to the font file at fontPath back to the
+// system font table.
+func reloadFont(fontPath *uint16, n int) {
+	for range n {
+		_, _, _ = procAddFontResourceW.Call(uintptr(unsafe.Pointer(fontPath)))
+	}
 }
 
 // otherFontExists reports whether a font registry value names an existing
@@ -149,10 +178,13 @@ func otherFontExists(value, fullPath string) bool {
 	if !filepath.IsAbs(prevPath) {
 		prevPath = filepath.Join(FontsDir, prevPath)
 	}
+
 	if strings.EqualFold(filepath.Clean(prevPath), filepath.Clean(fullPath)) {
 		return false
 	}
+
 	_, err := os.Stat(prevPath)
+
 	return err == nil
 }
 
@@ -166,8 +198,9 @@ func fileInUse(err error) bool {
 func replaceAtReboot(fullPath string, data []byte) error {
 	tmp, err := os.CreateTemp(filepath.Dir(fullPath), filepath.Base(fullPath)+".*.tmp")
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot create temporary font file: %w", err)
 	}
+
 	_, err = tmp.Write(data)
 	if closeErr := tmp.Close(); err == nil {
 		err = closeErr
@@ -177,13 +210,16 @@ func replaceAtReboot(fullPath string, data []byte) error {
 	if err == nil {
 		from, err = windows.UTF16PtrFromString(tmp.Name())
 	}
+
 	if err == nil {
 		to, err = windows.UTF16PtrFromString(fullPath)
 	}
+
 	if err == nil {
 		err = windows.MoveFileEx(from, to,
 			windows.MOVEFILE_REPLACE_EXISTING|windows.MOVEFILE_DELAY_UNTIL_REBOOT)
 	}
+
 	if err != nil {
 		os.Remove(tmp.Name())
 		return fmt.Errorf("cannot schedule font replacement: %w", err)
