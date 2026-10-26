@@ -95,16 +95,23 @@ func TestPathForms(t *testing.T) {
 func TestFileURLToPath(t *testing.T) {
 	t.Parallel()
 
+	const (
+		unixFont    = "/usr/share/fonts/x.ttf"
+		windowsFont = `C:\fonts\x.ttf`
+	)
+
 	tests := map[string]string{
-		"file:///usr/share/fonts/x.ttf":          "/usr/share/fonts/x.ttf",
-		"file://localhost/usr/share/fonts/x.ttf": "/usr/share/fonts/x.ttf",
+		"file:///usr/share/fonts/x.ttf":          unixFont,
+		"file://localhost/usr/share/fonts/x.ttf": unixFont,
+		"file://LOCALHOST/usr/share/fonts/x.ttf": unixFont,
 		"file:///tmp/My%20Fonts/x.ttf":           "/tmp/My Fonts/x.ttf",
 		"file://server/share/x.ttf":              "",
 	}
 	if runtime.GOOS == "windows" {
 		tests = map[string]string{
-			"file:///C:/fonts/x.ttf":          `C:\fonts\x.ttf`,
-			"file://localhost/C:/fonts/x.ttf": `C:\fonts\x.ttf`,
+			"file:///C:/fonts/x.ttf":          windowsFont,
+			"file://localhost/C:/fonts/x.ttf": windowsFont,
+			"file://LOCALHOST/C:/fonts/x.ttf": windowsFont,
 			"file:///C:/My%20Fonts/x.ttf":     `C:\My Fonts\x.ttf`,
 			"file://server/share/x.ttf":       `\\server\share\x.ttf`,
 		}
