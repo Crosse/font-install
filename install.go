@@ -52,7 +52,10 @@ func installFontPath(fontPath string, expandGlob bool) error {
 	switch u.Scheme {
 	case "file", "":
 		// Shells on Windows do not expand wildcards for command arguments.
-		if expandGlob && strings.ContainsAny(fontPath, "*?[") {
+		// An existing file is used as-is, since font names often contain
+		// brackets (e.g. "Inter[opsz,wght].ttf").
+		_, statErr := os.Stat(fontPath)
+		if expandGlob && statErr != nil && strings.ContainsAny(fontPath, "*?[") {
 			matches, err := filepath.Glob(fontPath)
 			if err != nil {
 				return fmt.Errorf("invalid file pattern: %w", err)
