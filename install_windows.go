@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"unsafe"
 
@@ -78,7 +79,11 @@ func platformDependentInstall(fontData *FontData) error {
 	}
 	defer k.Close()
 
-	valueName := fmt.Sprintf("%s (TrueType)", fontData.Name)
+	fontType := "TrueType"
+	if strings.EqualFold(filepath.Ext(fileName), ".otf") {
+		fontType = "OpenType"
+	}
+	valueName := fmt.Sprintf("%s (%s)", fontData.Name, fontType)
 	if err = k.SetStringValue(valueName, registryValue); err != nil {
 		// If this fails, remove the font file as well.
 		log.Error(err)
