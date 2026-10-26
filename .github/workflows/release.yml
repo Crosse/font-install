@@ -12,13 +12,13 @@ jobs:
       contents: write
     steps:
     - name: checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v7
 
     - name: "setup go"
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v7
       with:
         cache: true
-        go-version-file: 'go.mod'
+        go-version: stable
 
     - name: build
       run: make zip
