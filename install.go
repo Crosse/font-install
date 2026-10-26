@@ -31,47 +31,86 @@ func InstallFont(fontPath string) error {
 }
 
 func installFontPath(fontPath string, expandGlob bool) error {
-	var (
-		b        []byte
-		err      error
-		fontData *FontData
-	)
-
-	// Windows drive letters look like URL schemes to url.Parse.
-	var u *url.URL
-	if runtime.GOOS == "windows" && filepath.VolumeName(fontPath) != "" {
-		u = &url.URL{Path: fontPath}
-	} else {
-		u, err = url.Parse(fontPath)
-		if err != nil {
-			return fmt.Errorf("error parsing path: %w", err)
-		}
+	// Only arguments that look like URLs are parsed as URLs. Parsing plain
+	// paths misreads Windows drive letters and colons as schemes, and percent
+	// signs as escapes.
+	if strings.Contains(fontPath, "://") {
+		return installFromURL(fontPath)
 	}
 
-	filename := path.Base(u.Path)
+	// Shells on Windows do not expand wildcards for command arguments.
+	// An existing file is used as-is, since font names often contain
+	// brackets (e.g. "Inter[opsz,wght].ttf").
+	_, statErr := os.Stat(fontPath)
+	if expandGlob && statErr != nil && strings.ContainsAny(fontPath, "*?[") {
+		return installGlob(fontPath)
+	}
+
+	b, err := getLocalFile(fontPath)
+	if err != nil {
+		return err
+	}
+
+	return installData(filepath.Base(fontPath), b)
+}
+
+// installFromURL installs the font at a file, http, or https URL.
+func installFromURL(rawURL string) error {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("error parsing URL: %w", err)
+	}
+
 	switch u.Scheme {
-	case "file", "":
-		// Shells on Windows do not expand wildcards for command arguments.
-		// An existing file is used as-is, since font names often contain
-		// brackets (e.g. "Inter[opsz,wght].ttf").
-		_, statErr := os.Stat(fontPath)
-		if expandGlob && statErr != nil && strings.ContainsAny(fontPath, "*?[") {
-			return installGlob(fontPath)
-		}
-
-		if b, err = getLocalFile(fontPath); err != nil {
+	case "file":
+		localPath, err := fileURLToPath(u)
+		if err != nil {
 			return err
 		}
 
-		filename = filepath.Base(fontPath)
+		return installFontPath(localPath, false)
 	case "http", "https":
-		if b, err = getRemoteFile(fontPath); err != nil {
+		b, err := getRemoteFile(rawURL)
+		if err != nil {
 			return err
 		}
+
+		return installData(path.Base(u.Path), b)
 	default:
 		return fmt.Errorf("unhandled URL scheme: %v", u.Scheme)
 	}
+}
 
+// fileURLToPath converts a file URL to a local path. On Windows, a URL with
+// a host becomes a UNC path.
+func fileURLToPath(u *url.URL) (string, error) {
+	hasHost := u.Host != "" && u.Host != "localhost"
+
+	if runtime.GOOS != "windows" {
+		if hasHost {
+			return "", fmt.Errorf("unsupported file URL host: %q", u.Host)
+		}
+
+		return u.Path, nil
+	}
+
+	// file:///C:/fonts/x.ttf has the path "/C:/fonts/x.ttf".
+	p := u.Path
+	if len(p) >= 3 && p[0] == '/' && p[2] == ':' {
+		p = p[1:]
+	}
+
+	p = filepath.FromSlash(p)
+	if hasHost {
+		p = `\\` + u.Host + p
+	}
+
+	return p, nil
+}
+
+// installData installs the font, or the fonts in the archive, in b.
+// filename is used to identify the file type.
+func installData(filename string, b []byte) error {
 	ct := getContentType(b)
 	log.Debugf("content type: %s", ct)
 
@@ -87,7 +126,7 @@ func installFontPath(fontPath string, expandGlob bool) error {
 
 		fallthrough
 	default:
-		fontData, err = NewFontData(filename, b)
+		fontData, err := NewFontData(filename, b)
 		if err != nil {
 			return err
 		}
