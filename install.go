@@ -84,7 +84,7 @@ func installFromURL(rawURL string) error {
 // fileURLToPath converts a file URL to a local path. On Windows, a URL with
 // a host becomes a UNC path.
 func fileURLToPath(u *url.URL) (string, error) {
-	hasHost := u.Host != "" && u.Host != "localhost"
+	hasHost := u.Host != "" && !strings.EqualFold(u.Host, "localhost")
 
 	if runtime.GOOS != "windows" {
 		if hasHost {
