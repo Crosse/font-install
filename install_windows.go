@@ -75,7 +75,7 @@ func platformDependentInstall(fontData *FontData) error {
 	k, _, err := registry.CreateKey(
 		hive,
 		`SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts`,
-		registry.SET_VALUE)
+		registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
 		// If this fails, remove the font file as well.
 		log.Error(err)
@@ -95,6 +95,7 @@ func platformDependentInstall(fontData *FontData) error {
 		fontType = "OpenType"
 	}
 	valueName := fmt.Sprintf("%s (%s)", fontData.Name, fontType)
+	prevValue, _, prevErr := k.GetStringValue(valueName)
 	if err = k.SetStringValue(valueName, registryValue); err != nil {
 		// If this fails, remove the font file as well.
 		log.Error(err)
@@ -117,8 +118,16 @@ func platformDependentInstall(fontData *FontData) error {
 
 	added, _, callErr := procAddFontResourceW.Call(uintptr(unsafe.Pointer(fontPath)))
 	if added == 0 {
-		if err := k.DeleteValue(valueName); err != nil {
-			log.Error(err)
+		// Restore an earlier registration of this font if its file is still
+		// there; otherwise remove the entry that was just written.
+		var regErr error
+		if prevErr == nil && otherFontExists(prevValue, fullPath) {
+			regErr = k.SetStringValue(valueName, prevValue)
+		} else {
+			regErr = k.DeleteValue(valueName)
+		}
+		if regErr != nil {
+			log.Error(regErr)
 		}
 		if err := os.Remove(fullPath); err != nil {
 			log.Error(err)
@@ -131,6 +140,20 @@ func platformDependentInstall(fontData *FontData) error {
 	const hwndBroadcast, wmFontChange = 0xffff, 0x001d
 	procSendNotifyMessageW.Call(hwndBroadcast, wmFontChange, 0, 0)
 	return nil
+}
+
+// otherFontExists reports whether a font registry value names an existing
+// file other than fullPath.
+func otherFontExists(value, fullPath string) bool {
+	prevPath := value
+	if !filepath.IsAbs(prevPath) {
+		prevPath = filepath.Join(FontsDir, prevPath)
+	}
+	if strings.EqualFold(filepath.Clean(prevPath), filepath.Clean(fullPath)) {
+		return false
+	}
+	_, err := os.Stat(prevPath)
+	return err == nil
 }
 
 func fileInUse(err error) bool {
