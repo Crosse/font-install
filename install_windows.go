@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -10,6 +11,7 @@ import (
 	"unsafe"
 
 	log "github.com/Crosse/gosimplelogger"
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -51,6 +53,13 @@ func platformDependentInstall(fontData *FontData) error {
 		}
 	}
 	err = os.WriteFile(fullPath, fontData.Data, 0o644)
+	pending := false
+	if globalInstall && fileInUse(err) {
+		// Fonts in %WINDIR%\Fonts can stay mapped by other processes even after
+		// unloading. Like Windows Installer, replace the file at the next boot.
+		err = replaceAtReboot(fullPath, fontData.Data)
+		pending = err == nil
+	}
 	if err != nil {
 		reload(unloaded)
 		return fmt.Errorf("cannot write file: %w", err)
@@ -71,7 +80,9 @@ func platformDependentInstall(fontData *FontData) error {
 		// If this fails, remove the font file as well.
 		log.Error(err)
 
-		if nexterr := os.Remove(fullPath); nexterr != nil {
+		if pending {
+			reload(unloaded)
+		} else if nexterr := os.Remove(fullPath); nexterr != nil {
 			return fmt.Errorf("error removing font: %w", nexterr)
 		}
 
@@ -88,11 +99,20 @@ func platformDependentInstall(fontData *FontData) error {
 		// If this fails, remove the font file as well.
 		log.Error(err)
 
-		if nexterr := os.Remove(fullPath); nexterr != nil {
+		if pending {
+			reload(unloaded)
+		} else if nexterr := os.Remove(fullPath); nexterr != nil {
 			return fmt.Errorf("error removing font: %w", nexterr)
 		}
 
 		return fmt.Errorf("error writing to registry: %w", err)
+	}
+
+	if pending {
+		// The old file stays in place until the reboot, so keep it loaded.
+		reload(unloaded)
+		log.Infof("%s is in use and will be updated after a reboot", fullPath)
+		return nil
 	}
 
 	added, _, callErr := procAddFontResourceW.Call(uintptr(unsafe.Pointer(fontPath)))
@@ -110,5 +130,41 @@ func platformDependentInstall(fontData *FontData) error {
 	// Tell running applications to refresh their font lists without a logoff.
 	const hwndBroadcast, wmFontChange = 0xffff, 0x001d
 	procSendNotifyMessageW.Call(hwndBroadcast, wmFontChange, 0, 0)
+	return nil
+}
+
+func fileInUse(err error) bool {
+	return errors.Is(err, windows.ERROR_SHARING_VIOLATION) ||
+		errors.Is(err, windows.ERROR_USER_MAPPED_FILE)
+}
+
+// replaceAtReboot writes data next to fullPath and schedules it to replace
+// fullPath at the next boot. This requires administrator privileges.
+func replaceAtReboot(fullPath string, data []byte) error {
+	tmp, err := os.CreateTemp(filepath.Dir(fullPath), filepath.Base(fullPath)+".*.tmp")
+	if err != nil {
+		return err
+	}
+	_, err = tmp.Write(data)
+	if closeErr := tmp.Close(); err == nil {
+		err = closeErr
+	}
+
+	var from, to *uint16
+	if err == nil {
+		from, err = windows.UTF16PtrFromString(tmp.Name())
+	}
+	if err == nil {
+		to, err = windows.UTF16PtrFromString(fullPath)
+	}
+	if err == nil {
+		err = windows.MoveFileEx(from, to,
+			windows.MOVEFILE_REPLACE_EXISTING|windows.MOVEFILE_DELAY_UNTIL_REBOOT)
+	}
+	if err != nil {
+		os.Remove(tmp.Name())
+		return fmt.Errorf("cannot schedule font replacement: %w", err)
+	}
+
 	return nil
 }
