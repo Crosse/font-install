@@ -20,6 +20,18 @@ func TestLocalGlob(t *testing.T) {
 		t.Fatalf("expected matched file to be parsed, got %v", err)
 	}
 
+	// An existing literal path must not be treated as a pattern, which would
+	// match "font1.ttf" instead. The decoy looks like gzip so reading it fails
+	// differently.
+	decoy := filepath.Join(dir, "font1.ttf")
+	if err := os.WriteFile(decoy, []byte("\x1f\x8b\x08 not gzip"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	err = InstallFont(font)
+	if err == nil || !strings.Contains(err.Error(), "cannot parse font") {
+		t.Fatalf("expected literal file to be parsed, got %v", err)
+	}
+
 	err = InstallFont(filepath.Join(dir, "missing*.ttf"))
 	if err == nil || !strings.Contains(err.Error(), "no files match") {
 		t.Fatalf("expected unmatched pattern error, got %v", err)
